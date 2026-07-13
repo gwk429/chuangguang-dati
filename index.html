@@ -1,0 +1,593 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>《壶口瀑布》写法闯关大挑战</title>
+  <style>
+    :root {
+      color-scheme: light;
+      --ink: #2c180f;
+      --paper: rgba(255, 249, 235, 0.92);
+      --line: rgba(101, 52, 28, 0.24);
+      --red: #b73820;
+      --gold: #d18b2c;
+      --green: #28744f;
+      --blue: #215f83;
+      --shadow: 0 18px 50px rgba(46, 22, 8, 0.22);
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    html,
+    body {
+      width: 100%;
+      height: 100%;
+      margin: 0;
+      overflow: hidden;
+      font-family: "Microsoft YaHei", "PingFang SC", "Noto Sans CJK SC", sans-serif;
+      background: #5b2617;
+      color: var(--ink);
+    }
+
+    button {
+      font: inherit;
+    }
+
+    .stage {
+      position: fixed;
+      inset: 0;
+      display: grid;
+      place-items: center;
+      background:
+        linear-gradient(90deg, rgba(63, 23, 14, 0.5), rgba(255, 239, 206, 0.1), rgba(68, 24, 11, 0.45)),
+        url("assets/course-bg.jpeg") center / cover no-repeat;
+    }
+
+    .board {
+      position: relative;
+      width: min(100vw, calc(100vh * 16 / 9));
+      height: min(100vh, calc(100vw * 9 / 16));
+      min-width: 320px;
+      min-height: 180px;
+      padding: clamp(18px, 3.1vmin, 38px);
+    }
+
+    .screen {
+      position: absolute;
+      inset: clamp(18px, 3.1vmin, 38px);
+      display: none;
+      grid-template-rows: auto 1fr auto;
+      gap: clamp(12px, 2vmin, 20px);
+      padding: clamp(20px, 3vmin, 36px);
+      border: 2px solid rgba(255, 255, 255, 0.45);
+      border-radius: 8px;
+      background:
+        linear-gradient(135deg, rgba(255, 252, 239, 0.95), rgba(255, 232, 194, 0.88)),
+        radial-gradient(circle at 82% 14%, rgba(209, 139, 44, 0.2), transparent 34%);
+      box-shadow: var(--shadow);
+      overflow: hidden;
+    }
+
+    .screen.active {
+      display: grid;
+    }
+
+    .topbar,
+    .bottombar {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 16px;
+    }
+
+    .badge {
+      display: inline-flex;
+      align-items: center;
+      height: clamp(30px, 4.1vmin, 44px);
+      padding: 0 clamp(12px, 1.8vmin, 22px);
+      border-radius: 999px;
+      background: #fff4cf;
+      border: 1px solid rgba(181, 104, 35, 0.3);
+      color: #6d331e;
+      font-weight: 700;
+      font-size: clamp(14px, 2vmin, 22px);
+      white-space: nowrap;
+    }
+
+    .title {
+      margin: 0;
+      color: #8f2b1d;
+      font-size: clamp(32px, 6.2vmin, 72px);
+      line-height: 1.05;
+      letter-spacing: 0;
+    }
+
+    .subtitle {
+      max-width: 900px;
+      margin: clamp(14px, 2vmin, 24px) 0 0;
+      color: #5c2e1d;
+      font-size: clamp(16px, 2.6vmin, 30px);
+      line-height: 1.55;
+      font-weight: 700;
+    }
+
+    .home-center,
+    .finish-center {
+      align-self: center;
+      display: grid;
+      gap: clamp(14px, 2.4vmin, 26px);
+    }
+
+    .river-line {
+      width: min(620px, 72%);
+      height: 8px;
+      border-radius: 999px;
+      background: linear-gradient(90deg, var(--red), var(--gold), var(--blue));
+      box-shadow: 0 8px 20px rgba(139, 46, 28, 0.22);
+    }
+
+    .question {
+      position: relative;
+      display: flex;
+      gap: clamp(16px, 2.4vmin, 28px);
+      align-items: stretch;
+      width: 100%;
+      max-width: 100%;
+      min-height: 0;
+      overflow: hidden;
+    }
+
+    .prompt {
+      flex: 1 1 63%;
+      display: grid;
+      align-content: center;
+      gap: clamp(14px, 2vmin, 22px);
+      padding: clamp(18px, 2.3vmin, 28px);
+      border-radius: 8px;
+      background: rgba(255, 255, 255, 0.58);
+      border: 1px solid var(--line);
+      min-width: 0;
+    }
+
+    .prompt h2 {
+      margin: 0;
+      color: #942d1c;
+      font-size: clamp(22px, 3.2vmin, 40px);
+      line-height: 1.2;
+      letter-spacing: 0;
+    }
+
+    .prompt p {
+      margin: 0;
+      font-size: clamp(18px, 2.45vmin, 30px);
+      line-height: 1.58;
+      font-weight: 700;
+    }
+
+    .options {
+      flex: 0 1 35.4%;
+      display: grid;
+      gap: clamp(10px, 1.55vmin, 16px);
+      align-content: center;
+      max-width: 540px;
+      min-width: 0;
+      overflow: hidden;
+    }
+
+    .option {
+      display: grid;
+      grid-template-columns: auto minmax(0, 1fr);
+      align-items: center;
+      column-gap: clamp(8px, 1.2vmin, 14px);
+      width: 100%;
+      min-height: clamp(56px, 7.2vmin, 82px);
+      padding: clamp(10px, 1.6vmin, 18px) clamp(14px, 2vmin, 22px);
+      border: 2px solid rgba(118, 61, 31, 0.18);
+      border-radius: 8px;
+      background: rgba(255, 253, 244, 0.96);
+      color: #3a2115;
+      cursor: pointer;
+      text-align: left;
+      box-shadow: 0 10px 24px rgba(67, 31, 14, 0.1);
+      transition: transform 0.15s ease, border-color 0.15s ease, background 0.15s ease;
+    }
+
+    .option:hover,
+    .option:focus-visible {
+      transform: translateY(-2px);
+      border-color: rgba(183, 56, 32, 0.58);
+      outline: none;
+    }
+
+    .option strong {
+      display: inline-grid;
+      place-items: center;
+      width: clamp(28px, 3.6vmin, 42px);
+      height: clamp(28px, 3.6vmin, 42px);
+      border-radius: 50%;
+      background: #f1cc83;
+      color: #6a2e19;
+    }
+
+    .option span {
+      display: block;
+      min-width: 0;
+      font-size: clamp(16px, 2.1vmin, 26px);
+      font-weight: 700;
+      line-height: 1.35;
+      overflow-wrap: break-word;
+      word-break: normal;
+    }
+
+    .option.correct {
+      border-color: rgba(40, 116, 79, 0.78);
+      background: #e9f7ed;
+    }
+
+    .option.wrong {
+      border-color: rgba(183, 56, 32, 0.8);
+      background: #ffe8df;
+    }
+
+    .feedback {
+      min-height: clamp(38px, 4.8vmin, 56px);
+      display: flex;
+      align-items: center;
+      color: #6b301b;
+      font-size: clamp(16px, 2.25vmin, 26px);
+      font-weight: 800;
+    }
+
+    .primary,
+    .secondary {
+      min-width: clamp(130px, 17vmin, 210px);
+      height: clamp(48px, 6.2vmin, 72px);
+      padding: 0 clamp(18px, 2.4vmin, 30px);
+      border: 0;
+      border-radius: 8px;
+      cursor: pointer;
+      color: #fff;
+      font-size: clamp(18px, 2.45vmin, 30px);
+      font-weight: 900;
+      box-shadow: 0 12px 26px rgba(95, 35, 18, 0.22);
+    }
+
+    .primary {
+      background: linear-gradient(135deg, #b73820, #d18b2c);
+    }
+
+    .secondary {
+      background: linear-gradient(135deg, #215f83, #28744f);
+    }
+
+    .primary:disabled {
+      opacity: 0.45;
+      cursor: default;
+      box-shadow: none;
+    }
+
+    .progress {
+      flex: 1;
+      height: clamp(12px, 1.8vmin, 20px);
+      border-radius: 999px;
+      background: rgba(105, 52, 24, 0.14);
+      overflow: hidden;
+      border: 1px solid rgba(105, 52, 24, 0.18);
+    }
+
+    .progress span {
+      display: block;
+      width: 0%;
+      height: 100%;
+      border-radius: inherit;
+      background: linear-gradient(90deg, #b73820, #d18b2c, #28744f);
+      transition: width 0.25s ease;
+    }
+
+    .score {
+      color: #743a21;
+      font-size: clamp(16px, 2.2vmin, 26px);
+      font-weight: 900;
+      white-space: nowrap;
+    }
+
+    .seal {
+      width: clamp(94px, 13vmin, 148px);
+      height: clamp(94px, 13vmin, 148px);
+      display: grid;
+      place-items: center;
+      border-radius: 50%;
+      background: #b73820;
+      color: #fff4d2;
+      border: 6px double #ffd78a;
+      font-size: clamp(22px, 3.4vmin, 42px);
+      font-weight: 900;
+      box-shadow: 0 16px 36px rgba(122, 31, 14, 0.28);
+    }
+
+    .finish-row {
+      display: flex;
+      align-items: center;
+      gap: clamp(20px, 3vmin, 34px);
+    }
+
+    .finish-copy {
+      max-width: 860px;
+    }
+
+    .finish-copy h2 {
+      margin: 0 0 12px;
+      color: #8f2b1d;
+      font-size: clamp(30px, 5.2vmin, 62px);
+      line-height: 1.1;
+      letter-spacing: 0;
+    }
+
+    .finish-copy p {
+      margin: 0;
+      color: #5c2e1d;
+      font-size: clamp(18px, 2.6vmin, 30px);
+      line-height: 1.5;
+      font-weight: 800;
+    }
+
+    @media (max-width: 980px), (max-aspect-ratio: 4 / 3) {
+      .question {
+        flex-direction: column;
+        gap: clamp(12px, 2vmin, 18px);
+        overflow: hidden;
+      }
+
+      .prompt,
+      .options {
+        flex: 0 1 auto;
+        max-width: none;
+      }
+
+      .options {
+        align-content: start;
+        min-width: 0;
+        overflow: hidden;
+      }
+
+      .prompt {
+        align-content: start;
+      }
+    }
+  </style>
+</head>
+<body>
+  <main class="stage">
+    <section class="board" aria-live="polite">
+      <article class="screen active" id="home">
+        <div class="topbar">
+          <span class="badge">《壶口瀑布》写法闯关赛</span>
+          <span class="badge">横版课堂互动</span>
+        </div>
+        <div class="home-center">
+          <div class="river-line"></div>
+          <h1 class="title">奔涌吧，黄河少年！</h1>
+          <p class="subtitle">直面壶口之魂，破解大河背后的写作密码。</p>
+        </div>
+        <div class="bottombar">
+          <span class="score">共 6 题 · 5 关</span>
+          <button class="primary" type="button" id="startBtn">开始闯关</button>
+        </div>
+      </article>
+
+      <article class="screen" id="quiz">
+        <div class="topbar">
+          <span class="badge" id="levelBadge">第一关</span>
+          <div class="progress" aria-hidden="true"><span id="progressBar"></span></div>
+          <span class="score" id="scoreText">0 / 6</span>
+        </div>
+        <div class="question">
+          <div class="prompt">
+            <h2 id="questionTitle">题目</h2>
+            <p id="questionText"></p>
+          </div>
+          <div class="options" id="options"></div>
+        </div>
+        <div class="bottombar">
+          <div class="feedback" id="feedback"></div>
+          <button class="primary" type="button" id="nextBtn" disabled>下一题</button>
+        </div>
+      </article>
+
+      <article class="screen" id="finish">
+        <div class="topbar">
+          <span class="badge">闯关完成</span>
+          <span class="badge" id="finalScore">0 / 6</span>
+        </div>
+        <div class="finish-center">
+          <div class="finish-row">
+            <div class="seal">通关</div>
+            <div class="finish-copy">
+              <h2>黄河写作密码已解锁</h2>
+              <p id="finishText">所至、所见、所感相融，景中见魂，水中见人。</p>
+            </div>
+          </div>
+        </div>
+        <div class="bottombar">
+          <span class="score">壶口铸魂 · 青云传韵</span>
+          <button class="secondary" type="button" id="restartBtn">再闯一次</button>
+        </div>
+      </article>
+    </section>
+  </main>
+
+  <script>
+    const questions = [
+      {
+        level: "第一关",
+        title: "游记三要素",
+        text: "梁衡的《壶口瀑布》是一篇优美的游记。游记类散文的核心三要素通常是指什么？",
+        options: [
+          "时间、人物、地点",
+          "所至（踪迹）、所见（景观）、所感（感悟）",
+          "起因、经过、结果"
+        ],
+        answer: 1,
+        right: "答对了！游记要写清踪迹、景观与感悟。"
+      },
+      {
+        level: "第二关",
+        title: "观察方式",
+        text: "文中描写河心观景：“人在此处，如在黄河的深处。俯视……仰视……”，这种观察方式属于？",
+        options: [
+          "移步换景",
+          "定点换景"
+        ],
+        answer: 1,
+        right: "很准！站定一点，从不同角度展开观察。"
+      },
+      {
+        level: "第三关",
+        title: "描写角度",
+        text: "“车还在半山腰就听见涛声隐隐如雷，河谷里雾气弥漫，我们大着胆子到滩里，那河就像一锅正沸的水”，这段描写运用的角度是？",
+        options: [
+          "听觉角度",
+          "多感官角度（听觉与视觉结合）",
+          "视觉角度"
+        ],
+        answer: 1,
+        right: "漂亮！涛声与雾气交织，听觉和视觉一起发力。"
+      },
+      {
+        level: "第四关",
+        title: "修辞手法",
+        text: "“其势如千军万马，互相挤着、撞着，推推搡搡，前呼后拥，撞向石壁……”这段话主要运用了什么修辞手法？",
+        options: [
+          "夸张、排比",
+          "比喻、拟人",
+          "对比、引用"
+        ],
+        answer: 1,
+        right: "答对！把黄河写得有形、有势，也有生命感。"
+      },
+      {
+        level: "第五关 · 第一题",
+        title: "主题升华",
+        text: "本文通过写黄河的“柔中带刚”，最终升华为对什么的赞美？",
+        options: [
+          "自然景观的奇特瑰丽",
+          "中华民族不屈不挠、勇往直前的精神",
+          "作者个人仕途的感慨"
+        ],
+        answer: 1,
+        right: "答对！自然景观最终升华为民族精神。"
+      },
+      {
+        level: "第五关 · 第二题",
+        title: "写作方法",
+        text: "本文结尾段通过对黄河水的性格总结，将自然之水与民族灵魂结合，运用了什么写作方法？",
+        options: [
+          "由景入理，托物言志（以水喻人）",
+          "借景抒情",
+          "先抑后扬"
+        ],
+        answer: 0,
+        right: "通关！由景入理，以黄河之水写民族之魂。"
+      }
+    ];
+
+    const home = document.querySelector("#home");
+    const quiz = document.querySelector("#quiz");
+    const finish = document.querySelector("#finish");
+    const startBtn = document.querySelector("#startBtn");
+    const restartBtn = document.querySelector("#restartBtn");
+    const nextBtn = document.querySelector("#nextBtn");
+    const levelBadge = document.querySelector("#levelBadge");
+    const progressBar = document.querySelector("#progressBar");
+    const scoreText = document.querySelector("#scoreText");
+    const questionTitle = document.querySelector("#questionTitle");
+    const questionText = document.querySelector("#questionText");
+    const optionsWrap = document.querySelector("#options");
+    const feedback = document.querySelector("#feedback");
+    const finalScore = document.querySelector("#finalScore");
+    const finishText = document.querySelector("#finishText");
+
+    let index = 0;
+    let score = 0;
+    let locked = false;
+
+    function show(screen) {
+      [home, quiz, finish].forEach(item => item.classList.remove("active"));
+      screen.classList.add("active");
+    }
+
+    function start() {
+      index = 0;
+      score = 0;
+      locked = false;
+      show(quiz);
+      renderQuestion();
+    }
+
+    function renderQuestion() {
+      const item = questions[index];
+      locked = false;
+      nextBtn.disabled = true;
+      feedback.textContent = "";
+      levelBadge.textContent = item.level;
+      questionTitle.textContent = item.title;
+      questionText.textContent = item.text;
+      scoreText.textContent = `${score} / ${questions.length}`;
+      progressBar.style.width = `${(index / questions.length) * 100}%`;
+      nextBtn.textContent = index === questions.length - 1 ? "看结果" : "下一题";
+      optionsWrap.innerHTML = "";
+
+      item.options.forEach((option, optionIndex) => {
+        const button = document.createElement("button");
+        button.className = "option";
+        button.type = "button";
+        button.innerHTML = `<strong>${String.fromCharCode(65 + optionIndex)}</strong><span>${option}</span>`;
+        button.addEventListener("click", () => choose(optionIndex));
+        optionsWrap.appendChild(button);
+      });
+    }
+
+    function choose(optionIndex) {
+      if (locked) return;
+      locked = true;
+      const item = questions[index];
+      const buttons = [...optionsWrap.querySelectorAll(".option")];
+      buttons.forEach((button, idx) => {
+        if (idx === item.answer) button.classList.add("correct");
+        if (idx === optionIndex && idx !== item.answer) button.classList.add("wrong");
+      });
+
+      if (optionIndex === item.answer) {
+        score += 1;
+        feedback.textContent = item.right;
+      } else {
+        feedback.textContent = `再看一眼文本，正确答案是 ${String.fromCharCode(65 + item.answer)}。`;
+      }
+
+      scoreText.textContent = `${score} / ${questions.length}`;
+      progressBar.style.width = `${((index + 1) / questions.length) * 100}%`;
+      nextBtn.disabled = false;
+    }
+
+    function next() {
+      if (index < questions.length - 1) {
+        index += 1;
+        renderQuestion();
+      } else {
+        finalScore.textContent = `${score} / ${questions.length}`;
+        finishText.textContent = score === questions.length
+          ? "满分通关！所至、所见、所感相融，景中见魂，水中见人。"
+          : "完成闯关！回到文本再读一遍，黄河的写作密码会更清楚。";
+        show(finish);
+      }
+    }
+
+    startBtn.addEventListener("click", start);
+    restartBtn.addEventListener("click", start);
+    nextBtn.addEventListener("click", next);
+  </script>
+</body>
+</html>
