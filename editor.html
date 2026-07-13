@@ -1,0 +1,549 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>《壶口瀑布》答题页编辑器</title>
+  <style>
+    :root {
+      --ink: #2d1a10;
+      --muted: #76523f;
+      --line: #e3c9a2;
+      --paper: #fff9ed;
+      --red: #b73820;
+      --gold: #d18b2c;
+      --green: #28744f;
+      --blue: #215f83;
+    }
+
+    * { box-sizing: border-box; }
+
+    body {
+      margin: 0;
+      font-family: "Microsoft YaHei", "PingFang SC", sans-serif;
+      color: var(--ink);
+      background: #f6efe2;
+    }
+
+    .app {
+      min-height: 100vh;
+      display: grid;
+      grid-template-columns: minmax(360px, 520px) minmax(520px, 1fr);
+    }
+
+    .panel {
+      height: 100vh;
+      overflow: auto;
+      padding: 22px;
+      border-right: 1px solid var(--line);
+      background: #fffdf7;
+    }
+
+    .preview {
+      height: 100vh;
+      padding: 22px;
+      overflow: auto;
+      background: #efe0c5;
+    }
+
+    h1, h2, h3, p { margin-top: 0; }
+
+    h1 {
+      margin-bottom: 6px;
+      color: var(--red);
+      font-size: 26px;
+    }
+
+    .hint {
+      margin-bottom: 18px;
+      color: var(--muted);
+      font-size: 14px;
+      line-height: 1.6;
+    }
+
+    .field {
+      margin-bottom: 14px;
+    }
+
+    label {
+      display: block;
+      margin-bottom: 6px;
+      color: #613725;
+      font-weight: 800;
+      font-size: 14px;
+    }
+
+    input,
+    textarea,
+    select {
+      width: 100%;
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      padding: 10px 12px;
+      background: #fff;
+      color: var(--ink);
+      font: inherit;
+    }
+
+    textarea {
+      min-height: 88px;
+      resize: vertical;
+      line-height: 1.5;
+    }
+
+    .question-card {
+      margin: 18px 0;
+      padding: 14px;
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      background: var(--paper);
+    }
+
+    .question-head {
+      display: flex;
+      gap: 8px;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 10px;
+    }
+
+    .question-head strong {
+      color: var(--red);
+    }
+
+    .option-row {
+      display: grid;
+      grid-template-columns: 28px 1fr 40px;
+      gap: 8px;
+      align-items: center;
+      margin: 8px 0;
+    }
+
+    .option-row input[type="radio"] {
+      width: 18px;
+      height: 18px;
+    }
+
+    .actions {
+      position: sticky;
+      bottom: 0;
+      display: flex;
+      gap: 10px;
+      flex-wrap: wrap;
+      padding: 14px 0 0;
+      background: linear-gradient(180deg, rgba(255,253,247,0), #fffdf7 28%);
+    }
+
+    button {
+      min-height: 40px;
+      border: 0;
+      border-radius: 8px;
+      padding: 0 14px;
+      color: #fff;
+      background: var(--blue);
+      font: inherit;
+      font-weight: 900;
+      cursor: pointer;
+    }
+
+    button.secondary { background: var(--green); }
+    button.warn { background: var(--red); }
+    button.light {
+      border: 1px solid var(--line);
+      color: var(--ink);
+      background: #fff;
+    }
+
+    .frame {
+      position: sticky;
+      top: 22px;
+      width: min(100%, calc((100vh - 44px) * 16 / 9));
+      aspect-ratio: 16 / 9;
+      margin: 0 auto;
+      border: 10px solid #3d2116;
+      border-radius: 10px;
+      box-shadow: 0 20px 50px rgba(50, 23, 10, 0.28);
+      background:
+        linear-gradient(90deg, rgba(63, 23, 14, 0.46), rgba(255, 239, 206, 0.14), rgba(68, 24, 11, 0.42)),
+        url("assets/course-bg.jpeg") center / cover no-repeat;
+      overflow: hidden;
+    }
+
+    .slide {
+      position: absolute;
+      inset: 5%;
+      display: grid;
+      grid-template-rows: auto 1fr auto;
+      gap: 2.4%;
+      padding: 3%;
+      border: 2px solid rgba(255, 255, 255, 0.45);
+      border-radius: 8px;
+      background: linear-gradient(135deg, rgba(255, 252, 239, 0.95), rgba(255, 232, 194, 0.88));
+    }
+
+    .badge {
+      display: inline-flex;
+      align-items: center;
+      height: 34px;
+      padding: 0 14px;
+      border-radius: 999px;
+      background: #fff4cf;
+      border: 1px solid rgba(181, 104, 35, 0.3);
+      color: #6d331e;
+      font-weight: 900;
+      font-size: 15px;
+    }
+
+    .slide h2 {
+      margin: 0;
+      color: var(--red);
+      font-size: clamp(26px, 4.2vw, 54px);
+      line-height: 1.05;
+    }
+
+    .slide p {
+      color: #5c2e1d;
+      font-size: clamp(14px, 1.9vw, 24px);
+      line-height: 1.5;
+      font-weight: 800;
+    }
+
+    .mini-question {
+      display: grid;
+      grid-template-columns: 1fr 0.8fr;
+      gap: 18px;
+      align-items: center;
+    }
+
+    .mini-options {
+      display: grid;
+      gap: 10px;
+    }
+
+    .mini-option {
+      min-height: 44px;
+      border: 2px solid rgba(118, 61, 31, 0.18);
+      border-radius: 8px;
+      padding: 8px 12px;
+      background: rgba(255, 253, 244, 0.96);
+      font-weight: 800;
+      font-size: clamp(12px, 1.45vw, 19px);
+    }
+
+    .mini-option.good {
+      border-color: rgba(40, 116, 79, 0.78);
+      background: #e9f7ed;
+    }
+
+    @media (max-width: 980px) {
+      .app {
+        grid-template-columns: 1fr;
+      }
+
+      .panel,
+      .preview {
+        height: auto;
+      }
+
+      .frame {
+        position: relative;
+        top: auto;
+      }
+    }
+  </style>
+</head>
+<body>
+  <main class="app">
+    <section class="panel">
+      <h1>答题页编辑器</h1>
+      <p class="hint">改完左侧内容，右侧会实时预览。点“下载学生答题页”后，会生成一个新的 HTML 文件，可放进希沃白板做跳转。</p>
+
+      <div class="field">
+        <label for="mainTitle">首页标题</label>
+        <input id="mainTitle">
+      </div>
+      <div class="field">
+        <label for="subTitle">首页副标题</label>
+        <textarea id="subTitle"></textarea>
+      </div>
+
+      <div id="questionList"></div>
+
+      <div class="actions">
+        <button type="button" class="secondary" id="addQuestion">添加题目</button>
+        <button type="button" id="download">下载学生答题页</button>
+        <button type="button" class="light" id="save">保存到本机浏览器</button>
+        <button type="button" class="warn" id="reset">恢复初始内容</button>
+      </div>
+    </section>
+
+    <section class="preview">
+      <div class="frame">
+        <div class="slide" id="previewSlide"></div>
+      </div>
+    </section>
+  </main>
+
+  <script>
+    const defaults = {
+      title: "奔涌吧，黄河少年！",
+      subtitle: "直面壶口之魂，破解大河背后的写作密码。",
+      questions: [
+        {
+          level: "第一关",
+          title: "游记三要素",
+          text: "梁衡的《壶口瀑布》是一篇优美的游记。游记类散文的核心三要素通常是指什么？",
+          options: ["时间、人物、地点", "所至（踪迹）、所见（景观）、所感（感悟）", "起因、经过、结果"],
+          answer: 1
+        },
+        {
+          level: "第二关",
+          title: "观察方式",
+          text: "文中描写河心观景：“人在此处，如在黄河的深处。俯视……仰视……”，这种观察方式属于？",
+          options: ["移步换景", "定点换景"],
+          answer: 1
+        },
+        {
+          level: "第三关",
+          title: "描写角度",
+          text: "“车还在半山腰就听见涛声隐隐如雷，河谷里雾气弥漫，我们大着胆子到滩里，那河就像一锅正沸的水”，这段描写运用的角度是？",
+          options: ["听觉角度", "多感官角度（听觉与视觉结合）", "视觉角度"],
+          answer: 1
+        },
+        {
+          level: "第四关",
+          title: "修辞手法",
+          text: "“其势如千军万马，互相挤着、撞着，推推搡搡，前呼后拥，撞向石壁……”这段话主要运用了什么修辞手法？",
+          options: ["夸张、排比", "比喻、拟人", "对比、引用"],
+          answer: 1
+        },
+        {
+          level: "第五关 · 第一题",
+          title: "主题升华",
+          text: "本文通过写黄河的“柔中带刚”，最终升华为对什么的赞美？",
+          options: ["自然景观的奇特瑰丽", "中华民族不屈不挠、勇往直前的精神", "作者个人仕途的感慨"],
+          answer: 1
+        },
+        {
+          level: "第五关 · 第二题",
+          title: "写作方法",
+          text: "本文结尾段通过对黄河水的性格总结，将自然之水与民族灵魂结合，运用了什么写作方法？",
+          options: ["由景入理，托物言志（以水喻人）", "借景抒情", "先抑后扬"],
+          answer: 0
+        }
+      ]
+    };
+
+    let state = load();
+    const titleInput = document.querySelector("#mainTitle");
+    const subtitleInput = document.querySelector("#subTitle");
+    const questionList = document.querySelector("#questionList");
+    const previewSlide = document.querySelector("#previewSlide");
+
+    function clone(value) {
+      return JSON.parse(JSON.stringify(value));
+    }
+
+    function load() {
+      try {
+        return JSON.parse(localStorage.getItem("hukouQuizEditor")) || clone(defaults);
+      } catch {
+        return clone(defaults);
+      }
+    }
+
+    function persist() {
+      localStorage.setItem("hukouQuizEditor", JSON.stringify(state));
+    }
+
+    function renderEditor() {
+      titleInput.value = state.title;
+      subtitleInput.value = state.subtitle;
+      questionList.innerHTML = "";
+      state.questions.forEach((question, index) => {
+        const card = document.createElement("article");
+        card.className = "question-card";
+        card.innerHTML = `
+          <div class="question-head">
+            <strong>题目 ${index + 1}</strong>
+            <button type="button" class="warn" data-delete="${index}">删除</button>
+          </div>
+          <div class="field">
+            <label>关卡名</label>
+            <input data-field="level" data-index="${index}" value="${escapeAttr(question.level)}">
+          </div>
+          <div class="field">
+            <label>小标题</label>
+            <input data-field="title" data-index="${index}" value="${escapeAttr(question.title)}">
+          </div>
+          <div class="field">
+            <label>题干</label>
+            <textarea data-field="text" data-index="${index}">${escapeHtml(question.text)}</textarea>
+          </div>
+          <label>选项与正确答案</label>
+          <div>
+            ${question.options.map((option, optionIndex) => `
+              <div class="option-row">
+                <input type="radio" name="answer-${index}" data-answer="${index}" value="${optionIndex}" ${question.answer === optionIndex ? "checked" : ""}>
+                <input data-option="${index}" data-option-index="${optionIndex}" value="${escapeAttr(option)}">
+                <button type="button" class="light" data-remove-option="${index}" data-option-index="${optionIndex}">删</button>
+              </div>
+            `).join("")}
+          </div>
+          <button type="button" class="light" data-add-option="${index}">添加选项</button>
+        `;
+        questionList.appendChild(card);
+      });
+      renderPreview();
+    }
+
+    function renderPreview() {
+      const first = state.questions[0] || { level: "第一关", title: "题目", text: "请添加题目", options: [], answer: 0 };
+      previewSlide.innerHTML = `
+        <div>
+          <span class="badge">${escapeHtml(first.level)}</span>
+        </div>
+        <div class="mini-question">
+          <div>
+            <h2>${escapeHtml(state.title)}</h2>
+            <p>${escapeHtml(first.text)}</p>
+          </div>
+          <div class="mini-options">
+            ${first.options.map((option, index) => `<div class="mini-option ${index === first.answer ? "good" : ""}">${String.fromCharCode(65 + index)}. ${escapeHtml(option)}</div>`).join("")}
+          </div>
+        </div>
+        <div>
+          <span class="badge">共 ${state.questions.length} 题 · 可点击闯关</span>
+        </div>
+      `;
+    }
+
+    function escapeHtml(text) {
+      return String(text).replace(/[&<>"']/g, ch => ({
+        "&": "&amp;",
+        "<": "&lt;",
+        ">": "&gt;",
+        '"': "&quot;",
+        "'": "&#39;"
+      }[ch]));
+    }
+
+    function escapeAttr(text) {
+      return escapeHtml(text).replace(/\n/g, " ");
+    }
+
+    function studentHtml(data) {
+      return `<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>${escapeHtml(data.title)}</title>
+  <style>
+    *{box-sizing:border-box}html,body{width:100%;height:100%;margin:0;overflow:hidden;font-family:"Microsoft YaHei","PingFang SC",sans-serif;background:#5b2617;color:#2c180f}button{font:inherit}.stage{position:fixed;inset:0;display:grid;place-items:center;background:linear-gradient(90deg,rgba(63,23,14,.5),rgba(255,239,206,.1),rgba(68,24,11,.45)),url("assets/course-bg.jpeg") center/cover no-repeat}.board{position:relative;width:min(100vw,calc(100vh * 16 / 9));height:min(100vh,calc(100vw * 9 / 16));padding:clamp(18px,3.1vmin,38px)}.screen{position:absolute;inset:clamp(18px,3.1vmin,38px);display:none;grid-template-rows:auto 1fr auto;gap:clamp(12px,2vmin,20px);padding:clamp(20px,3vmin,36px);border:2px solid rgba(255,255,255,.45);border-radius:8px;background:linear-gradient(135deg,rgba(255,252,239,.95),rgba(255,232,194,.88));box-shadow:0 18px 50px rgba(46,22,8,.22)}.screen.active{display:grid}.top,.bottom{display:flex;align-items:center;justify-content:space-between;gap:16px}.badge{display:inline-flex;align-items:center;height:clamp(30px,4.1vmin,44px);padding:0 clamp(12px,1.8vmin,22px);border-radius:999px;background:#fff4cf;border:1px solid rgba(181,104,35,.3);color:#6d331e;font-weight:900;font-size:clamp(14px,2vmin,22px);white-space:nowrap}h1{margin:0;color:#8f2b1d;font-size:clamp(32px,6.2vmin,72px);line-height:1.05}p{margin:0;color:#5c2e1d;font-size:clamp(18px,2.6vmin,30px);line-height:1.55;font-weight:800}.center{align-self:center;display:grid;gap:clamp(14px,2.4vmin,26px)}.line{width:min(620px,72%);height:8px;border-radius:999px;background:linear-gradient(90deg,#b73820,#d18b2c,#215f83)}.question{display:grid;grid-template-columns:minmax(0,1fr) minmax(260px,.82fr);gap:clamp(16px,2.4vmin,28px);align-items:stretch}.prompt{display:grid;align-content:center;gap:clamp(14px,2vmin,22px);padding:clamp(18px,2.3vmin,28px);border-radius:8px;background:rgba(255,255,255,.58);border:1px solid rgba(101,52,28,.24)}h2{margin:0;color:#942d1c;font-size:clamp(22px,3.2vmin,40px);line-height:1.2}.options{display:grid;gap:clamp(10px,1.55vmin,16px);align-content:center}.option{width:100%;min-height:clamp(56px,7.2vmin,82px);padding:clamp(10px,1.6vmin,18px) clamp(14px,2vmin,22px);border:2px solid rgba(118,61,31,.18);border-radius:8px;background:rgba(255,253,244,.96);color:#3a2115;cursor:pointer;text-align:left;font-weight:900;font-size:clamp(16px,2.1vmin,26px)}.option strong{display:inline-grid;place-items:center;width:clamp(28px,3.6vmin,42px);height:clamp(28px,3.6vmin,42px);margin-right:clamp(8px,1.2vmin,12px);border-radius:50%;background:#f1cc83;color:#6a2e19}.option.correct{border-color:rgba(40,116,79,.78);background:#e9f7ed}.option.wrong{border-color:rgba(183,56,32,.8);background:#ffe8df}.feedback{min-height:clamp(38px,4.8vmin,56px);display:flex;align-items:center;color:#6b301b;font-size:clamp(16px,2.25vmin,26px);font-weight:900}.primary,.secondary{min-width:clamp(130px,17vmin,210px);height:clamp(48px,6.2vmin,72px);padding:0 clamp(18px,2.4vmin,30px);border:0;border-radius:8px;cursor:pointer;color:#fff;font-size:clamp(18px,2.45vmin,30px);font-weight:900;box-shadow:0 12px 26px rgba(95,35,18,.22)}.primary{background:linear-gradient(135deg,#b73820,#d18b2c)}.secondary{background:linear-gradient(135deg,#215f83,#28744f)}.primary:disabled{opacity:.45;cursor:default}.progress{flex:1;height:clamp(12px,1.8vmin,20px);border-radius:999px;background:rgba(105,52,24,.14);overflow:hidden;border:1px solid rgba(105,52,24,.18)}.progress span{display:block;width:0%;height:100%;border-radius:inherit;background:linear-gradient(90deg,#b73820,#d18b2c,#28744f);transition:width .25s ease}.score{color:#743a21;font-size:clamp(16px,2.2vmin,26px);font-weight:900;white-space:nowrap}.seal{width:clamp(94px,13vmin,148px);height:clamp(94px,13vmin,148px);display:grid;place-items:center;border-radius:50%;background:#b73820;color:#fff4d2;border:6px double #ffd78a;font-size:clamp(22px,3.4vmin,42px);font-weight:900}.finish{display:flex;align-items:center;gap:clamp(20px,3vmin,34px)}@media(max-aspect-ratio:4/3){.question{grid-template-columns:1fr}}
+  </style>
+</head>
+<body>
+<main class="stage"><section class="board">
+<article class="screen active" id="home"><div class="top"><span class="badge">《壶口瀑布》写法闯关赛</span><span class="badge">横版课堂互动</span></div><div class="center"><div class="line"></div><h1>${escapeHtml(data.title)}</h1><p>${escapeHtml(data.subtitle)}</p></div><div class="bottom"><span class="score">共 ${data.questions.length} 题</span><button class="primary" id="start">开始闯关</button></div></article>
+<article class="screen" id="quiz"><div class="top"><span class="badge" id="level"></span><div class="progress"><span id="bar"></span></div><span class="score" id="score"></span></div><div class="question"><div class="prompt"><h2 id="qt"></h2><p id="q"></p></div><div class="options" id="opts"></div></div><div class="bottom"><div class="feedback" id="fb"></div><button class="primary" id="next" disabled>下一题</button></div></article>
+<article class="screen" id="finish"><div class="top"><span class="badge">闯关完成</span><span class="badge" id="final"></span></div><div class="center"><div class="finish"><div class="seal">通关</div><div><h1>黄河写作密码已解锁</h1><p id="finishText"></p></div></div></div><div class="bottom"><span class="score">壶口铸魂 · 青云传韵</span><button class="secondary" id="restart">再闯一次</button></div></article>
+</section></main>
+<script>
+const questions=${JSON.stringify(data.questions)};
+let i=0,s=0,locked=false;
+const home=document.querySelector("#home"),quiz=document.querySelector("#quiz"),finish=document.querySelector("#finish");
+function show(x){[home,quiz,finish].forEach(v=>v.classList.remove("active"));x.classList.add("active")}
+function render(){const item=questions[i];locked=false;next.disabled=true;fb.textContent="";level.textContent=item.level;qt.textContent=item.title;q.textContent=item.text;score.textContent=s+" / "+questions.length;bar.style.width=(i/questions.length*100)+"%";next.textContent=i===questions.length-1?"看结果":"下一题";opts.innerHTML="";item.options.forEach((op,idx)=>{const b=document.createElement("button");b.className="option";b.innerHTML="<strong>"+String.fromCharCode(65+idx)+"</strong><span>"+op+"</span>";b.onclick=()=>choose(idx);opts.appendChild(b)})}
+function choose(idx){if(locked)return;locked=true;const item=questions[i];[...opts.children].forEach((b,j)=>{if(j===item.answer)b.classList.add("correct");if(j===idx&&j!==item.answer)b.classList.add("wrong")});if(idx===item.answer){s++;fb.textContent="答对了！"}else{fb.textContent="正确答案是 "+String.fromCharCode(65+item.answer)+"。"}score.textContent=s+" / "+questions.length;bar.style.width=((i+1)/questions.length*100)+"%";next.disabled=false}
+function begin(){i=0;s=0;show(quiz);render()}
+start.onclick=begin;restart.onclick=begin;next.onclick=()=>{if(i<questions.length-1){i++;render()}else{final.textContent=s+" / "+questions.length;finishText.textContent=s===questions.length?"满分通关！景中见魂，水中见人。":"完成闯关！回到文本再读一遍，写作密码会更清楚。";show(finish)}};
+</script>
+</body>
+</html>`;
+    }
+
+    titleInput.addEventListener("input", () => {
+      state.title = titleInput.value;
+      renderPreview();
+    });
+
+    subtitleInput.addEventListener("input", () => {
+      state.subtitle = subtitleInput.value;
+      renderPreview();
+    });
+
+    questionList.addEventListener("input", event => {
+      const target = event.target;
+      if (target.dataset.field) {
+        state.questions[Number(target.dataset.index)][target.dataset.field] = target.value;
+      }
+      if (target.dataset.option) {
+        state.questions[Number(target.dataset.option)].options[Number(target.dataset.optionIndex)] = target.value;
+      }
+      renderPreview();
+    });
+
+    questionList.addEventListener("change", event => {
+      const target = event.target;
+      if (target.dataset.answer) {
+        state.questions[Number(target.dataset.answer)].answer = Number(target.value);
+        renderPreview();
+      }
+    });
+
+    questionList.addEventListener("click", event => {
+      const target = event.target;
+      if (target.dataset.delete) {
+        state.questions.splice(Number(target.dataset.delete), 1);
+        renderEditor();
+      }
+      if (target.dataset.addOption) {
+        state.questions[Number(target.dataset.addOption)].options.push("新选项");
+        renderEditor();
+      }
+      if (target.dataset.removeOption) {
+        const question = state.questions[Number(target.dataset.removeOption)];
+        const optionIndex = Number(target.dataset.optionIndex);
+        question.options.splice(optionIndex, 1);
+        if (question.answer >= question.options.length) question.answer = Math.max(0, question.options.length - 1);
+        renderEditor();
+      }
+    });
+
+    document.querySelector("#addQuestion").addEventListener("click", () => {
+      state.questions.push({
+        level: `第${state.questions.length + 1}关`,
+        title: "新题目",
+        text: "请输入题干",
+        options: ["选项 A", "选项 B"],
+        answer: 0
+      });
+      renderEditor();
+    });
+
+    document.querySelector("#save").addEventListener("click", () => {
+      persist();
+      alert("已保存到本机浏览器。");
+    });
+
+    document.querySelector("#reset").addEventListener("click", () => {
+      if (!confirm("确定恢复初始内容吗？")) return;
+      state = clone(defaults);
+      persist();
+      renderEditor();
+    });
+
+    document.querySelector("#download").addEventListener("click", () => {
+      const blob = new Blob([studentHtml(state)], { type: "text/html;charset=utf-8" });
+      const a = document.createElement("a");
+      a.href = URL.createObjectURL(blob);
+      a.download = "壶口瀑布-闯关答题页.html";
+      a.click();
+      URL.revokeObjectURL(a.href);
+    });
+
+    renderEditor();
+  </script>
+</body>
+</html>
